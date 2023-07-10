@@ -1,3 +1,5 @@
-- [ ] Implement Google Auth to display user profile on the home page
+- [x] Implement Google Auth to display user profile on the home page
 
-- [ ] Hello
+- [x] Set MongoDB Atlas connection
+
+- [ ] Create a "create prompt" page

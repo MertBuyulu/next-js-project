@@ -8,7 +8,7 @@ export const POST = async (req) => {
     const newPrompt = new Prompt({
       creator: userId,
       prompt,
-      tag,
+      tag: tag.startsWith("#") ? tag : `#${tag}`,
     });
 
     await newPrompt.save();

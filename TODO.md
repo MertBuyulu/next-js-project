@@ -6,8 +6,20 @@
 
 - [x] Create a "create prompt" page
 
-### Extra Features Completed
+### Extra Features I'd like to add
 
-### Extra Features Not Completed
+- Go from top to buttom
 
-- [ ] Improve the current matching for filtering search results
+- [ ] convert codebase to typescript from js
+
+- [ ] add an option to sign up via email / password besides google auth
+
+- [ ] Allow users to have an options to create private/public prompts - Note: private prompts will not be shown under the feed
+
+- [ ] add a feature for users to upvote posts
+
+- [ ] Improve search functionality + add filtering options based on tag, popularity,
+
+- [ ] Create a custom "Page not found" page
+
+- [ ] Update the README file - include pictures

@@ -11,6 +11,9 @@ export const NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ baseUrl }) {
+      return baseUrl;
+    },
     async session({ session }) {
       // store the user id from MongoDB to session
       const sessionUser = await User.findOne({ email: session.user.email });

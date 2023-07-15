@@ -5,13 +5,18 @@ import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
 import Image from "next/image";
+import { Tag } from "antd";
 
 const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { data: session } = useSession();
   const [copied, setCopied] = useState("");
 
-  const pathname = usePathname();
-  const router = useRouter();
-  const { data: session } = useSession();
+  const privacyOptions = {
+    private: "red",
+    public: "green",
+  };
 
   const handleProfileClick = () => {
     // 1a. the post belongs not to the current user
@@ -60,6 +65,9 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
             </p>
           </div>
         </div>
+        <Tag className="font-satoshi" color={privacyOptions[post.privacy]}>
+          {post.privacy}
+        </Tag>
         <div className="copy_button" onClick={handleCopy}>
           <Image
             src={

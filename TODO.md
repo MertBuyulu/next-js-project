@@ -10,11 +10,11 @@
 
 - [x] Allow users to have an options to create private/public prompts - Note: private prompts will not be shown under the feed
 
-- [x] Fix the problem with updating the privacy option of a prompt on edit
+- [x] Fix the problem of updating the privacy option of a prompt on edit
 
 - [x] Display prompts based on privacy label conditionally on profile page
 
-- [ ] Add private/public banner to prompts
+- [x] Add private/public tag to prompts
 
 - [ ] add a feature for users to upvote posts
 

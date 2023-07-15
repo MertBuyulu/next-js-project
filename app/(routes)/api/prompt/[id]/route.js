@@ -16,7 +16,7 @@ export const GET = async (req, { params }) => {
 };
 
 export const PATCH = async (req, { params }) => {
-  const { prompt, tag } = await req.json();
+  const { prompt, tag, privacy } = await req.json();
   try {
     await connectToDB();
 
@@ -29,6 +29,7 @@ export const PATCH = async (req, { params }) => {
     // update the prompt
     existingPrompt.prompt = prompt;
     existingPrompt.tag = existingPrompt.tag.startsWith("#") ? tag : `#${tag}`;
+    existingPrompt.privacy = privacy;
 
     await existingPrompt.save();
 

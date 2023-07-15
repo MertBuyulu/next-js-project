@@ -13,6 +13,10 @@ const PromptSchema = new Schema({
     type: String,
     required: [true, "Tag is required."],
   },
+  privacy: {
+    type: String,
+    required: [true, "Privacy option is required."],
+  },
 });
 
 const Prompt = models.Prompt || model("Prompt", PromptSchema);

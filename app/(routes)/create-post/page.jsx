@@ -10,11 +10,13 @@ const CreatePost = () => {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const [submitting, setSubmitting] = useState(false);
   const [post, setPost] = useState({
     prompt: "",
     tag: "",
+    privacy: "",
   });
+
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -28,6 +30,7 @@ const CreatePost = () => {
           prompt: post.prompt,
           userId: session?.user.id,
           tag: post.tag,
+          privacy: post.privacy,
         }),
       });
 

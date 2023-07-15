@@ -14,6 +14,7 @@ const UpdatePost = () => {
   const [post, setPost] = useState({
     prompt: "",
     tag: "",
+    privacy: "",
   });
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const UpdatePost = () => {
       setPost({
         prompt: data.prompt,
         tag: data.tag,
+        privacy: data.privacy,
       });
     };
 
@@ -41,6 +43,7 @@ const UpdatePost = () => {
         body: JSON.stringify({
           prompt: post.prompt,
           tag: post.tag,
+          privacy: post.privacy,
         }),
       });
 

@@ -58,6 +58,7 @@ const MyProfile = () => {
       name="My"
       desc="Welcome to your personalized profile. Explore your exceptional prompts and be inspired by the power of their imagination."
       data={userPosts}
+      session={session}
       handleEdit={handleEdit}
       handleDelete={handleDelete}
     />

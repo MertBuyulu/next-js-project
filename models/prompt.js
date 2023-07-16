@@ -17,8 +17,25 @@ const PromptSchema = new Schema({
     type: String,
     required: [true, "Privacy option is required."],
   },
+  likes: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+});
+
+// Define a virtual property to calculate the number of likes
+PromptSchema.virtual("likeCount").get(function () {
+  return this.likes.length;
 });
 
 const Prompt = models.Prompt || model("Prompt", PromptSchema);
 
 export default Prompt;
+
+/* When do we user virtual methods in MongoDB
+In Mongoose, the virtual method is used to define virtual properties on a schema.
+Virtual properties are additional properties that you can define on a schema but are not persisted to the database.
+They are computed properties that are derived from other fields or perform some calculations or transformations on existing data.
+*/

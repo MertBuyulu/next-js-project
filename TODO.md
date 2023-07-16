@@ -16,6 +16,8 @@
 
 - [x] Add private/public tag to prompts
 
+- [ ] Update Prompt Schema
+
 - [ ] add a feature for users to upvote posts
 
 - [ ] Improve search functionality + add filtering options based on tag, popularity,

@@ -1,22 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
 import Image from "next/image";
 import { Tag } from "antd";
+import { LikeTwoTone, LikeOutlined } from "@ant-design/icons";
 
-const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const [copied, setCopied] = useState("");
-
+const PromptCard = ({
+  post,
+  promptDict,
+  handleTagClick,
+  handleEdit,
+  handleDelete,
+  session,
+}) => {
   const privacyOptions = {
     private: "red",
     public: "green",
   };
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // local states
+  const [copied, setCopied] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
 
   const handleProfileClick = () => {
     // 1a. the post belongs not to the current user
@@ -40,6 +48,34 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
     setTimeout(() => {
       setCopied("");
     }, 3000);
+  };
+
+  const handleLikeBtnToggle = async () => {
+    try {
+      // make a post request to add a new like clicked by the current user
+      if (!isLiked) {
+        const res = await fetch(`/api/prompt/${post._id}/like`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            likedBy: session?.user.id,
+          }),
+        });
+
+        setIsLiked(true);
+        return;
+      }
+
+      // make a delete request to remove the like from this post
+      const res = await fetch(`/api/prompt/${post._id}/like`, {
+        method: "DELETE",
+        body: JSON.stringify({
+          likedBy: session?.user.id,
+        }),
+      });
+      setIsLiked(false);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -82,17 +118,39 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
         </div>
       </div>
       <p className="my-4 font-satoshi text-sm text-gray-700">{post.prompt}</p>
-      <p
-        className="font-inter text-sm blue_gradient cursor-pointer"
-        // to direct users to similarly tagged posts once clicked
-        onClick={() => {
-          handleTagClick && handleTagClick(post.tag);
-        }}
-      >
-        {post.tag}
-      </p>
+      <div className="flex">
+        <p
+          className="font-inter text-sm blue_gradient cursor-pointer"
+          // to direct users to similarly tagged posts once clicked
+          onClick={() => {
+            handleTagClick && handleTagClick(post.tag);
+          }}
+        >
+          {post.tag}
+        </p>
+      </div>
+      {/* Like feature is not applicable to private posts shared by users */}
+      {post.privacy === "public" &&
+        (isLiked ? (
+          <div className="flex justify-end">
+            <LikeTwoTone
+              twoToneColor="#ec1d43"
+              className="mt-1"
+              onClick={handleLikeBtnToggle}
+            />
+            <span className="ml-1 tx-sm text-gray-500">{post.likeCount}</span>
+          </div>
+        ) : (
+          <div className="flex justify-end">
+            <LikeOutlined
+              className="mt-1 text-gray-500"
+              onClick={handleLikeBtnToggle}
+            />
+            <span className="ml-1 tx-sm text-gray-500">{post.likeCount}</span>
+          </div>
+        ))}
       {session?.user.id === post.creator._id && pathname === "/profile" && (
-        <div className="mt-5 flex-center gap-4 border-t border-gray-100 pt-3'">
+        <div className="mt-3 flex-center gap-4 border-t border-gray-100 pt-3'">
           <p
             className="font-inter text-sm green_gradient cursor-pointer"
             onClick={handleEdit}

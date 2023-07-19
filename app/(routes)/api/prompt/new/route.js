@@ -10,6 +10,7 @@ export const POST = async (req) => {
       prompt,
       privacy: privacy,
       tag: tag.startsWith("#") ? tag : `#${tag}`,
+      likes: [],
     });
 
     await newPrompt.save();

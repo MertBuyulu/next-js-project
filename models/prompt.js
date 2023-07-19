@@ -1,29 +1,35 @@
 import { Schema, model, models } from "mongoose";
 
-const PromptSchema = new Schema({
-  creator: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  prompt: {
-    type: String,
-    required: [true, "Prompt is required."],
-  },
-  tag: {
-    type: String,
-    required: [true, "Tag is required."],
-  },
-  privacy: {
-    type: String,
-    required: [true, "Privacy option is required."],
-  },
-  likes: [
-    {
+const PromptSchema = new Schema(
+  {
+    creator: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-  ],
-});
+    prompt: {
+      type: String,
+      required: [true, "Prompt is required."],
+    },
+    tag: {
+      type: String,
+      required: [true, "Tag is required."],
+    },
+    privacy: {
+      type: String,
+      required: [true, "Privacy option is required."],
+    },
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+  },
+  {
+    // Reference for why the below config is needed: https://mongoosejs.com/docs/guide.html#definition
+    toJSON: { virtuals: true },
+  }
+);
 
 // Define a virtual property to calculate the number of likes
 PromptSchema.virtual("likeCount").get(function () {

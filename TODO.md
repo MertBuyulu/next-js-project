@@ -16,9 +16,12 @@
 
 - [x] Add private/public tag to prompts
 
-- [ ] Update Prompt Schema
+- [x] Update Prompt Schema
 
-- [ ] add a feature for users to upvote posts
+- [ ] add a feature for users to like/unlike posts
+
+  - Liking for the first time means creating a new entry given creator's id [POST REQUEST]
+  - Unliking a post is a delete request made to the server
 
 - [ ] Improve search functionality + add filtering options based on tag, popularity,
 

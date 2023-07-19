@@ -14,6 +14,7 @@ const CreatePost = () => {
     prompt: "",
     tag: "",
     privacy: "",
+    likes: [],
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -31,6 +32,7 @@ const CreatePost = () => {
           userId: session?.user.id,
           tag: post.tag,
           privacy: post.privacy,
+          likes: [],
         }),
       });
 

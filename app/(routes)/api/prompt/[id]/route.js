@@ -20,7 +20,7 @@ export const PATCH = async (req, { params }) => {
   try {
     await connectToDB();
 
-    // fetdh the existing document
+    // fetch the existing document
     const existingPrompt = await Prompt.findById(params.id);
 
     if (!existingPrompt)

@@ -11,7 +11,6 @@ export const GET = async (req, { params }) => {
 
     return new Response(JSON.stringify(user_prompts), { status: 200 });
   } catch (error) {
-    // 500 -> server error
     return new Response("Failed to fetch user's prompts", { status: 500 });
   }
 };

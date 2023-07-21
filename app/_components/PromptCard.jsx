@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import Image from "next/image";
@@ -9,7 +9,7 @@ import { LikeTwoTone, LikeOutlined } from "@ant-design/icons";
 
 const PromptCard = ({
   post,
-  promptDict,
+  promptIdsLikedByUserDict,
   handleTagClick,
   handleEdit,
   handleDelete,
@@ -24,14 +24,56 @@ const PromptCard = ({
 
   // local states
   const [copied, setCopied] = useState("");
-  const [isLiked, setIsLiked] = useState(false);
+  // promptIdsLikedByUserDict is null if no user is currently logged in
+  const [isLiked, setIsLiked] = useState();
+  const [postCard, setPostCard] = useState(post);
+
+  useEffect(() => {
+    setIsLiked(
+      promptIdsLikedByUserDict && promptIdsLikedByUserDict[post._id]
+        ? true
+        : false
+    );
+  }, [promptIdsLikedByUserDict]);
+
+  const handleLikeBtnToggle = async () => {
+    try {
+      // make a post request to add a new like clicked by the current user
+      if (!isLiked) {
+        const likeRes = await fetch(`/api/prompt/${postCard._id}/like`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            likedBy: session?.user.id,
+          }),
+        });
+        const likedPost = await likeRes.json();
+        setPostCard(likedPost);
+        setIsLiked(true);
+        return;
+      }
+
+      // make a delete request to remove the like from this post
+      const unlikeRes = await fetch(`/api/prompt/${postCard._id}/like`, {
+        method: "DELETE",
+        body: JSON.stringify({
+          likedBy: session?.user.id,
+        }),
+      });
+
+      const unlikedPost = await unlikeRes.json();
+      setPostCard(unlikedPost);
+      setIsLiked(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleProfileClick = () => {
     // 1a. the post belongs not to the current user
     // 1b. the post belongs to the current user
     // 2a. direct user to "/profile/:id?name=<user_name>"
     // 2b. direct user to the url "/profile"
-    if (post.creator._id !== session?.user.id) {
+    if (postCard.creator._id !== session?.user.id) {
       // provide the username within the url
       return router.push(
         `/profile/${post.creator._id}?name=${post.creator.username}`
@@ -41,41 +83,13 @@ const PromptCard = ({
   };
 
   const handleCopy = () => {
-    setCopied(post.prompt);
+    setCopied(postCard.prompt);
     // reference: https://developer.mozilla.org/en-US/docs/Web/API/Window/navigator
-    navigator.clipboard.writeText(post.prompt);
+    navigator.clipboard.writeText(postCard.prompt);
     // reset the copied text to the clickboard after 3 seconds
     setTimeout(() => {
       setCopied("");
     }, 3000);
-  };
-
-  const handleLikeBtnToggle = async () => {
-    try {
-      // make a post request to add a new like clicked by the current user
-      if (!isLiked) {
-        const res = await fetch(`/api/prompt/${post._id}/like`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            likedBy: session?.user.id,
-          }),
-        });
-
-        setIsLiked(true);
-        return;
-      }
-
-      // make a delete request to remove the like from this post
-      const res = await fetch(`/api/prompt/${post._id}/like`, {
-        method: "DELETE",
-        body: JSON.stringify({
-          likedBy: session?.user.id,
-        }),
-      });
-      setIsLiked(false);
-    } catch (error) {
-      console.log(error);
-    }
   };
 
   return (
@@ -86,7 +100,7 @@ const PromptCard = ({
           onClick={handleProfileClick}
         >
           <Image
-            src={post.creator.image}
+            src={postCard.creator.image}
             alt="user_image"
             width={40}
             height={40}
@@ -94,62 +108,68 @@ const PromptCard = ({
           />
           <div className="flex flex-col">
             <h3 className="font-satoshi font-semibold text-gray-500">
-              {post.creator.username}
+              {postCard.creator.username}
             </h3>
             <p className="font-inter text-sm text-gray-500">
-              {post.creator.email}
+              {postCard.creator.email}
             </p>
           </div>
         </div>
-        <Tag className="font-satoshi" color={privacyOptions[post.privacy]}>
-          {post.privacy}
+        <Tag className="font-satoshi" color={privacyOptions[postCard.privacy]}>
+          {postCard.privacy}
         </Tag>
         <div className="copy_button" onClick={handleCopy}>
           <Image
             src={
-              copied === post.prompt
+              copied === postCard.prompt
                 ? "/assets/icons/tick.svg"
                 : "/assets/icons/copy.svg"
             }
-            alt={copied === post.prompt ? "tick_icon" : "copy_icon"}
+            alt={copied === postCard.prompt ? "tick_icon" : "copy_icon"}
             width={12}
             height={12}
           />
         </div>
       </div>
-      <p className="my-4 font-satoshi text-sm text-gray-700">{post.prompt}</p>
+      <p className="my-4 font-satoshi text-sm text-gray-700">
+        {postCard.prompt}
+      </p>
       <div className="flex">
         <p
           className="font-inter text-sm blue_gradient cursor-pointer"
           // to direct users to similarly tagged posts once clicked
           onClick={() => {
-            handleTagClick && handleTagClick(post.tag);
+            handleTagClick && handleTagClick(postCard.tag);
           }}
         >
-          {post.tag}
+          {postCard.tag}
         </p>
       </div>
       {/* Like feature is not applicable to private posts shared by users */}
-      {post.privacy === "public" &&
+      {postCard.privacy === "public" &&
         (isLiked ? (
           <div className="flex justify-end">
             <LikeTwoTone
               twoToneColor="#ec1d43"
               className="mt-1"
-              onClick={handleLikeBtnToggle}
+              onClick={session ? handleLikeBtnToggle : undefined}
             />
-            <span className="ml-1 tx-sm text-gray-500">{post.likeCount}</span>
+            <span className="ml-1 tx-sm text-gray-500">
+              {postCard.likeCount}
+            </span>
           </div>
         ) : (
           <div className="flex justify-end">
             <LikeOutlined
               className="mt-1 text-gray-500"
-              onClick={handleLikeBtnToggle}
+              onClick={session ? handleLikeBtnToggle : undefined}
             />
-            <span className="ml-1 tx-sm text-gray-500">{post.likeCount}</span>
+            <span className="ml-1 tx-sm text-gray-500">
+              {postCard.likeCount}
+            </span>
           </div>
         ))}
-      {session?.user.id === post.creator._id && pathname === "/profile" && (
+      {session?.user.id === postCard.creator._id && pathname === "/profile" && (
         <div className="mt-3 flex-center gap-4 border-t border-gray-100 pt-3'">
           <p
             className="font-inter text-sm green_gradient cursor-pointer"

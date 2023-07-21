@@ -1,28 +1,24 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import PromptCard from "@app/_components/PromptCard";
 
 // Sub Component
 const PromptCardList = ({
   data,
-  likedPostsByCurrentUser,
+  promptIdsLikedByUserDict,
   handleTagClick,
   session,
 }) => {
-  // const promptLikedDict = Object.fromEntries(
-  //   likedPostsByCurrentUser.map(likedPrompt[(likedPrompt._id, likedPrompt._id)])
-  // );
-
   return (
     <div className="mt-16 prompt_layout">
       {data.map((post) => (
         <PromptCard
           key={post._id}
           post={post}
-          // promptDict={promptLikedDict}
+          promptIdsLikedByUserDict={promptIdsLikedByUserDict}
           handleTagClick={handleTagClick}
           session={session}
         />
@@ -34,39 +30,60 @@ const PromptCardList = ({
 // Main Component
 const Feed = () => {
   const { data: session } = useSession();
+
   const [allPosts, setAllPosts] = useState([]);
-  // this will be an dict object where key and value will map to the same thing
-  const [likedPostsByCurrentUser, setLikedPostsByCurrentUser] = useState([]);
-
-  // we have posts -> {fields... , likes: [Object_ID, Creator_ID]}
-  // we need to find a way to look up for user's session id to match with one of the likes entiries' creator id if present
-  // when we fetch the posts data, we can extract the likes array and create a dict in form of {[creator_id]: {[object_id, creator_id]}}
-  // we then can pass this dict to the Prompt_Card component and do the necesaary logic to figure out whether the post is liked by the current user
-
-  // fetch posts liked by the current user
-  //
-
   const [searchText, setSearchText] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [searchedResults, setSearchedResults] = useState([]);
+  // this will be an dict object where key and value will map to the same thing
+  const [likedPostsByCurrentUser, setLikedPostsByCurrentUser] = useState([]);
 
-  // fetch the users' prompts
+  const promptIdsLikedByUserDict = useMemo(() => {
+    return Object.fromEntries(
+      likedPostsByCurrentUser.map((likedPrompt) => [
+        likedPrompt._id,
+        likedPrompt._id,
+      ])
+    );
+  }, [likedPostsByCurrentUser]);
+
+  // fetch all posts
   useEffect(() => {
-    const fetchPosts = async () => {
-      const res1 = await fetch("api/prompt");
-      // returns in form of {[post1, post2, post3, etc]}
-      const prompts = await res1.json();
+    const fetchAllPosts = async () => {
+      try {
+        const postsRes = await fetch("api/prompt");
 
-      // const res2 = await fetch(`/api/users/${session?.user.id}/likes`);
+        if (!postsRes.ok) throw new Error("Failed to fetch all posts");
 
-      //const likedPosts = res2.json();
-
-      setAllPosts(prompts);
-      // setLikedPostsByCurrentUser(likedPosts);
+        const posts = await postsRes.json();
+        setAllPosts(posts);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
-    fetchPosts();
+    fetchAllPosts();
   }, []);
+
+  // fetch the posts liked by the session user
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    const fetchLikedPosts = async () => {
+      try {
+        const url = `api/users/${session.user.id}/likes`;
+        const likedPostsRes = await fetch(url);
+        if (!likedPostsRes.ok)
+          throw new Error("Failed to fetch posts liked by current user");
+        const likedPosts = await likedPostsRes.json();
+        setLikedPostsByCurrentUser(likedPosts);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchLikedPosts();
+  }, [session]);
 
   const filterPosts = (searchText) => {
     // 'i' flag for case-insensitive search
@@ -118,7 +135,8 @@ const Feed = () => {
 
       <PromptCardList
         data={searchText ? searchedResults : allPosts}
-        likedPostsByCurrentUser={likedPostsByCurrentUser}
+        promptIdsLikedByUserDict={promptIdsLikedByUserDict}
+        //handleLikeBtnToggle={handleLikeBtnToggle}
         handleTagClick={handleTagClick}
         session={session}
       />

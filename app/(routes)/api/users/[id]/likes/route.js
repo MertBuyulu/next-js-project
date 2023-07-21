@@ -5,12 +5,12 @@ export const GET = async (req, { params }) => {
   try {
     await connectToDB();
 
-    console.log(params);
+    //If you want to get the _id values as strings instead of ObjectId type, you can add .lean() after the select("_id") method
     const user_liked_prompts = await Prompt.find({
-      likes: [{ creator: params.id }],
-    });
-
-    console.log(user_liked_prompts);
+      likes: { $in: [params.id] },
+    })
+      .select("_id")
+      .lean();
 
     if (!user_liked_prompts)
       return new Response("No user liked prompts found", { status: 404 });

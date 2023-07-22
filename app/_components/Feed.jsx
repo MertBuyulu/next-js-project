@@ -1,26 +1,20 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useMemo } from "react";
-
+import { useState, useEffect } from "react";
+import { useFetchPosts } from "@app/_utils/hooks/useFetchPosts";
 import PromptCard from "@app/_components/PromptCard";
 
 // Sub Component
-const PromptCardList = ({
-  data,
-  promptIdsLikedByUserDict,
-  handleTagClick,
-  session,
-}) => {
+const PromptCardList = ({ data, likedPostsMap, handleTagClick }) => {
   return (
     <div className="mt-16 prompt_layout">
       {data.map((post) => (
         <PromptCard
           key={post._id}
           post={post}
-          promptIdsLikedByUserDict={promptIdsLikedByUserDict}
+          likedPostsMap={likedPostsMap}
           handleTagClick={handleTagClick}
-          session={session}
         />
       ))}
     </div>
@@ -29,61 +23,28 @@ const PromptCardList = ({
 
 // Main Component
 const Feed = () => {
+  // Constants
   const { data: session } = useSession();
 
+  // Local States
   const [allPosts, setAllPosts] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [searchedResults, setSearchedResults] = useState([]);
-  // this will be an dict object where key and value will map to the same thing
-  const [likedPostsByCurrentUser, setLikedPostsByCurrentUser] = useState([]);
 
-  const promptIdsLikedByUserDict = useMemo(() => {
-    return Object.fromEntries(
-      likedPostsByCurrentUser.map((likedPrompt) => [
-        likedPrompt._id,
-        likedPrompt._id,
-      ])
-    );
-  }, [likedPostsByCurrentUser]);
+  const [postsLikedBySessionUserMap, setPostsLikedBySessionUserMap] = useState(
+    {}
+  );
 
-  // fetch all posts
+  const {
+    posts: fetchedPosts,
+    likedPostsMap: fetchedPostsLikedBySessionUserMap,
+  } = useFetchPosts({ sessionUserId: session?.user.id, fetchType: "feed" });
+
   useEffect(() => {
-    const fetchAllPosts = async () => {
-      try {
-        const postsRes = await fetch("api/prompt");
-
-        if (!postsRes.ok) throw new Error("Failed to fetch all posts");
-
-        const posts = await postsRes.json();
-        setAllPosts(posts);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchAllPosts();
-  }, []);
-
-  // fetch the posts liked by the session user
-  useEffect(() => {
-    if (!session?.user?.id) return;
-
-    const fetchLikedPosts = async () => {
-      try {
-        const url = `api/users/${session.user.id}/likes`;
-        const likedPostsRes = await fetch(url);
-        if (!likedPostsRes.ok)
-          throw new Error("Failed to fetch posts liked by current user");
-        const likedPosts = await likedPostsRes.json();
-        setLikedPostsByCurrentUser(likedPosts);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchLikedPosts();
-  }, [session]);
+    setAllPosts(fetchedPosts);
+    setPostsLikedBySessionUserMap(fetchedPostsLikedBySessionUserMap);
+  }, [fetchedPosts, fetchedPostsLikedBySessionUserMap]);
 
   const filterPosts = (searchText) => {
     // 'i' flag for case-insensitive search
@@ -135,10 +96,8 @@ const Feed = () => {
 
       <PromptCardList
         data={searchText ? searchedResults : allPosts}
-        promptIdsLikedByUserDict={promptIdsLikedByUserDict}
-        //handleLikeBtnToggle={handleLikeBtnToggle}
+        likedPostsMap={postsLikedBySessionUserMap}
         handleTagClick={handleTagClick}
-        session={session}
       />
     </section>
   );

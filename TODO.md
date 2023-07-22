@@ -20,7 +20,13 @@
 
 - [x] add a feature for users to like/unlike posts
 
-- [ ] Improve search functionality + add filtering options based on tag, popularity,
+- [x] refactor feed and prompcard pages a little bit if possible
+
+- [ ] Fix default privacy value when creating a new post untouched -> the form doesn't get submitted
+
+- [ ] Bring the like button functionality over to profile and profile/[id] pages
+
+- [ ] Improve search functionality + add filtering options based on tag, popularity
 
 - [ ] Create a custom "Page not found" page
 

@@ -1,33 +1,40 @@
 "use client";
 
+import Profile from "@app/_components/Profile";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-
-import Profile from "@app/_components/Profile";
+import { useSession } from "next-auth/react";
+import { useFetchPosts } from "@app/_utils/hooks/useFetchPosts";
 
 const UserProfile = ({ params }) => {
-  const [userPosts, setUserPosts] = useState([]);
-
+  // Constants
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const username = searchParams.get("name");
 
+  // Local States
+  const [userPosts, setUserPosts] = useState([]);
+  const [userPostsLikedBySessionUserMap, setUserPostsLikedBySessionUserrMap] =
+    useState({});
+
+  const {
+    posts: fetchedUserPosts,
+    likedPostsMap: fetchedUserPostsLikedByUserMap,
+  } = useFetchPosts({
+    sessionUserId: session?.user.id,
+    userId: params.id,
+    fetchType: "profile",
+  });
+
   useEffect(() => {
-    // fetch all posts associated with a single user
-    const fetchPosts = async () => {
-      // TODO: understand why you need "/" before api/... ,which is not needed for fetching current user's posts.
-      const res = await fetch(`/api/users/${params?.id}/posts`);
-      // returns in form of {[post1, post2, post3, etc]}
-      const data = await res.json();
-
-      setUserPosts(data);
-    };
-
-    if (params?.id) fetchPosts();
-  }, [params?.id]);
+    setUserPosts(fetchedUserPosts);
+    setUserPostsLikedBySessionUserrMap(fetchedUserPostsLikedByUserMap);
+  }, [fetchedUserPosts, fetchedUserPostsLikedByUserMap]);
 
   return (
     <Profile
       name={username}
+      likedPostsMap={userPostsLikedBySessionUserMap}
       desc={`Welcome to ${username}'s personalized profile. Explore ${username}'s exceptional prompts and be inspired by the power of their imagination`}
       data={userPosts}
     />

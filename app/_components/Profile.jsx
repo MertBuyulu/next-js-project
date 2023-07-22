@@ -1,6 +1,20 @@
 import PromptCard from "./PromptCard";
 
-const Profile = ({ name, desc, data, handleEdit, session, handleDelete }) => {
+const Profile = ({
+  name,
+  desc,
+  data,
+  likedPostsMap,
+  handleEdit,
+  session,
+  handleDelete,
+}) => {
+  const viewingOwnProfile =
+    data[0] && session?.user.id === data[0]?.creator._id;
+  const filteredData = viewingOwnProfile
+    ? data
+    : data.filter((post) => post.privacy === "public");
+
   return (
     <section className="w-full">
       <h1 className="head_text text-left">
@@ -8,27 +22,15 @@ const Profile = ({ name, desc, data, handleEdit, session, handleDelete }) => {
       </h1>
       <p className="desc text-left">{desc}</p>
       <div className="mt-10 prompt_layout">
-        {/* if the user see their profile, display all posts */}
-        {/* if the user see someone else's profile, display only the public posts */}
-        {session?.user.id === data[0]?.creator._id
-          ? data.map((post) => (
-              <PromptCard
-                key={post._id}
-                post={post}
-                handleEdit={() => handleEdit && handleEdit(post)}
-                handleDelete={() => handleDelete && handleDelete(post)}
-              />
-            ))
-          : data
-              .filter((post) => post.privacy === "public")
-              .map((post) => (
-                <PromptCard
-                  key={post._id}
-                  post={post}
-                  handleEdit={() => handleEdit && handleEdit(post)}
-                  handleDelete={() => handleDelete && handleDelete(post)}
-                />
-              ))}
+        {filteredData.map((post) => (
+          <PromptCard
+            key={post._id}
+            post={post}
+            likedPostsMap={likedPostsMap}
+            handleEdit={() => handleEdit && handleEdit(post)}
+            handleDelete={() => handleDelete && handleDelete(post)}
+          />
+        ))}
       </div>
     </section>
   );

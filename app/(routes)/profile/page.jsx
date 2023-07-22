@@ -3,27 +3,28 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useFetchPosts } from "@app/_utils/hooks/useFetchPosts";
 
 import Profile from "@app/_components/Profile";
 
 const MyProfile = () => {
+  // Constants
   const router = useRouter();
   const { data: session } = useSession();
 
+  // Local States
   const [userPosts, setUserPosts] = useState([]);
+  const [userPostsLikedByUserMap, setUserPostsLikedByUserMap] = useState({});
+
+  const {
+    posts: fetchedUserPosts,
+    likedPostsMap: fetchedUserPostsLikedByUserMap,
+  } = useFetchPosts({ sessionUserId: session?.user.id, fetchType: "profile" });
 
   useEffect(() => {
-    // fetch all posts associated with current user
-    const fetchPosts = async () => {
-      const res = await fetch(`api/users/${session?.user.id}/posts`);
-      // returns in form of {[post1, post2, post3, etc]}
-      const data = await res.json();
-
-      setUserPosts(data);
-    };
-
-    if (session?.user.id) fetchPosts();
-  }, [session?.user.id]);
+    setUserPosts(fetchedUserPosts);
+    setUserPostsLikedByUserMap(fetchedUserPostsLikedByUserMap);
+  }, [fetchedUserPosts, fetchedUserPostsLikedByUserMap]);
 
   const handleEdit = (post) => {
     router.push(`/update-post/?id=${post._id}`);
@@ -34,11 +35,8 @@ const MyProfile = () => {
       "Are you sure you want to delete this prompt?"
     );
 
-    if (!hasConfirmed)
-      // user decides not to the delete, just return
-      return;
+    if (!hasConfirmed) return;
 
-    // delete the post
     try {
       const res = await fetch(`api/prompt/${post._id}`, {
         method: "DELETE",
@@ -58,6 +56,7 @@ const MyProfile = () => {
       name="My"
       desc="Welcome to your personalized profile. Explore your exceptional prompts and be inspired by the power of their imagination."
       data={userPosts}
+      likedPostsMap={userPostsLikedByUserMap}
       session={session}
       handleEdit={handleEdit}
       handleDelete={handleDelete}

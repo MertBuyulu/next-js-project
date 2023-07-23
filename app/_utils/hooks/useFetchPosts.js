@@ -1,5 +1,38 @@
 import { useState, useEffect } from "react";
 
+/**
+ * Converts an object into a query string to be used in a URL.
+ *
+ * Each key-value pair in the object will be converted into a string
+ * of the format "key=value". All these strings are then joined
+ * together with an "&" character.
+ *
+ * @param {Object} params - The object to be converted into a query string.
+ * @returns {string} - The generated query string, or `undefined` if `params` is falsy.
+ */
+
+const objectToQueryString = (params) => {
+  return (
+    params &&
+    Object.keys(params)
+      .map((key) => key + "=" + params[key])
+      .join("&")
+  );
+};
+
+const createEndpoint = (
+  baseUrl,
+  destinationId = "",
+  destinationPath = "",
+  queryParams = null
+) => {
+  const query = objectToQueryString(queryParams);
+  const queryString = query ? `?${query}` : "";
+
+  const endpoint = `${baseUrl}/${destinationId}/${destinationPath}${queryString}`;
+  return endpoint;
+};
+
 export const useFetchPosts = (options) => {
   const { sessionUserId, userId = null, fetchType } = options;
 
@@ -8,6 +41,18 @@ export const useFetchPosts = (options) => {
     likedPostsMap: {},
   });
 
+  const fetchFromEndpoint = async (endpoint) => {
+    if (!endpoint) return [];
+
+    try {
+      const res = await fetch(endpoint, { method: "GET" });
+      if (res && !res.ok) throw new Error(`Failed to fetch from ${endpoint}`);
+      return await res.json();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const fetchPosts = async () => {
       // Conditions
@@ -15,37 +60,24 @@ export const useFetchPosts = (options) => {
 
       const postsEndPoint =
         fetchType === "feed"
-          ? "api/prompt"
-          : `/api/users/${actualUserId}/posts`;
+          ? createEndpoint("api/prompt")
+          : createEndpoint("/api/users", actualUserId, "posts");
 
-      const likedPostsEndpoint = actualUserId
-        ? fetchType === "feed"
-          ? `/api/users/${actualUserId}/likes`
-          : actualUserId === sessionUserId
-          ? `/api/users/${actualUserId}/likes?likedBy=self`
-          : `/api/users/${actualUserId}/likes?likedBy=${sessionUserId}`
-        : undefined;
+      const likedPostsEndpoint =
+        sessionUserId && actualUserId
+          ? fetchType === "feed"
+            ? createEndpoint("/api/users", actualUserId, "likes")
+            : actualUserId === sessionUserId
+            ? createEndpoint("/api/users", actualUserId, "likes", {
+                likedBy: "self",
+              })
+            : createEndpoint("/api/users", actualUserId, "likes", {
+                likedBy: sessionUserId,
+              })
+          : undefined;
 
-      const endpoints = [postsEndPoint];
-
-      if (likedPostsEndpoint) endpoints.push(likedPostsEndpoint);
-
-      const [postsRes, likedPostsRes] = await Promise.all(
-        endpoints.map((endpoint) => fetch(endpoint, { method: "GET" }))
-      );
-
-      if (!postsRes.ok) {
-        throw new Error(
-          "Failed to fetch all posts created by all users or a specific one"
-        );
-      }
-
-      if (!likedPostsRes.ok) {
-        throw new Error("Failed to fetch posts liked by self/others");
-      }
-
-      const posts = await postsRes.json();
-      const likedPosts = await likedPostsRes.json();
+      const posts = await fetchFromEndpoint(postsEndPoint);
+      const likedPosts = await fetchFromEndpoint(likedPostsEndpoint);
 
       const likedPostsMap = Object.fromEntries(
         likedPosts.map((likedPost) => [likedPost._id, likedPost])

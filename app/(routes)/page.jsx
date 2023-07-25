@@ -1,5 +1,3 @@
-// no need to import this in next.js -> import React from "react";
-
 import Feed from "@app/_components/Feed";
 
 const Home = () => {

@@ -22,12 +22,16 @@
 
 - [x] refactor feed and prompcard pages a little bit if possible
 
-- [ ] Fix default privacy value when creating a new post untouched -> the form doesn't get submitted
+- [x] Fix default privacy value when creating a new post untouched -> the form doesn't get submitted
 
-- [ ] Bring the like button functionality over to profile and profile/[id] pages
+- [x] Bring the like button functionality over to profile and profile/[id] pages
+
+- [x] Refactor the custom hook
 
 - [ ] Improve search functionality + add filtering options based on tag, popularity
 
 - [ ] Create a custom "Page not found" page
 
 - [ ] Update the README file - include pictures
+
+- [ ] Dockerize the application

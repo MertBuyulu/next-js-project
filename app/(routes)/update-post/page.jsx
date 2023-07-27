@@ -10,13 +10,13 @@ const UpdatePost = () => {
   const searchParams = useSearchParams();
   const postId = searchParams.get("id");
 
-  const [submitting, setSubmitting] = useState(false);
   const [post, setPost] = useState({
     prompt: "",
     tag: "",
     privacy: "",
   });
 
+  const [submitting, setSubmitting] = useState(false);
   useEffect(() => {
     const getPromptDetails = async () => {
       const response = await fetch(`/api/prompt/${postId}`);

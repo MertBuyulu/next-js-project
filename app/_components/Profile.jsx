@@ -9,8 +9,7 @@ const Profile = ({
   session,
   handleDelete,
 }) => {
-  const viewingOwnProfile =
-    data[0] && session?.user.id === data[0]?.creator._id;
+  const viewingOwnProfile = data && session?.user.id === data[0]?.creator._id;
   const filteredData = viewingOwnProfile
     ? data
     : data.filter((post) => post.privacy === "public");

@@ -28,6 +28,12 @@
 
 - [x] Refactor the custom hook
 
+- [ ] Fix problems on Nav component
+
+- [ ] Find a way to create a reusable component for creating/updating post - they're similar
+
+- [ ] Should you create a custom hook for creating navItems? like useGenerateNavItems(session, providers) - OPTIONAL
+
 - [ ] Improve search functionality + add filtering options based on tag, popularity
 
 - [ ] Create a custom "Page not found" page

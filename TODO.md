@@ -28,9 +28,9 @@
 
 - [x] Refactor the custom hook
 
-- [ ] Fix problems on Nav component
+- [x] Fix problems on Nav component
 
-- [ ] Find a way to create a reusable component for creating/updating post - they're similar
+- [ ] Create documentation using GPT-4
 
 - [ ] Should you create a custom hook for creating navItems? like useGenerateNavItems(session, providers) - OPTIONAL
 

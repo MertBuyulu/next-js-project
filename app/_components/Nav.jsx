@@ -5,29 +5,29 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { signIn, signOut, useSession, getProviders } from "next-auth/react";
 
-// TODOs
-// 1 - fix double signout button in the dropdown menu - priority
-
 const NavItemsOrderMap = {
   Desktop: {
     Logo: 0,
     Create: 1,
     SignOut: 2,
     Profile: 3,
+    SignIn: 1,
   },
   Mobile: {
     Logo: 0,
     Profile: 1,
     Create: 2,
     SignOut: 3,
+    SignIn: 1,
   },
 };
 
 const getOrderedNavItems = (items, viewPort) => {
   return items.sort((a, b) => {
-    return (
-      NavItemsOrderMap[viewPort][a.key] - NavItemsOrderMap[viewPort][b.key]
-    );
+    // all sign-in buttons are treated the same
+    const aKey = a.key.startsWith("SignIn") ? "SignIn" : a.key;
+    const bKey = b.key.startsWith("SignIn") ? "SignIn" : b.key;
+    return NavItemsOrderMap[viewPort][aKey] - NavItemsOrderMap[viewPort][bKey];
   });
 };
 
@@ -40,7 +40,10 @@ const NavItem = ({
   defaultAction,
   customAction,
 }) => {
-  const onClick = customAction || defaultAction;
+  const handleAction = () => {
+    customAction && customAction();
+    defaultAction && defaultAction();
+  };
 
   return type == "link" ? (
     <Link href={href} className={className}>
@@ -48,9 +51,28 @@ const NavItem = ({
     </Link>
   ) : (
     // item is a button for third party auth
-    <button type="button" onClick={onClick} className={className}>
+    <button type="button" onClick={handleAction} className={className}>
       {label}
     </button>
+  );
+};
+// just extract the map logic here from viewport components, pass viewport as props as well
+const NavItems = ({ items, viewPort, extraProps = {} }) => {
+  const { customAction = undefined } = extraProps;
+  return (
+    <>
+      {items.map(({ key, className, label, ...item }) => (
+        <NavItem
+          {...item}
+          key={key}
+          label={label && label[viewPort] ? label[viewPort] : label}
+          className={
+            className && className[viewPort] ? className[viewPort] : className
+          }
+          customAction={customAction}
+        />
+      ))}
+    </>
   );
 };
 
@@ -60,17 +82,15 @@ const DesktopView = ({ navItems }) => {
   return (
     <div className="sm:flex hidden">
       <div className="flex gap-3 md:gap-5">
-        {orderedNavItems.map(({ key, ...item }) => (
-          <NavItem key={key} {...item} />
-        ))}
+        <NavItems items={orderedNavItems} viewPort="desktop" />
       </div>
     </div>
   );
 };
 
 const MobileView = ({
+  session,
   navItems,
-  imageSrc,
   toggleDropdown,
   setToggleDropdown,
 }) => {
@@ -79,27 +99,29 @@ const MobileView = ({
 
   return (
     <div className="sm:hidden flex relative">
-      <div className="flex">
-        <Image
-          src={imageSrc}
-          width={37}
-          height={37}
-          className="rounded-full"
-          alt="profile"
-          onClick={() => setToggleDropdown((prev) => !prev)}
-        />
-        {toggleDropdown && (
-          <div className="dropdown">
-            {orderedNavItems.map(({ key, ...item }) => (
-              <NavItem
-                key={key}
-                {...item}
-                customAction={() => setToggleDropdown(false)}
+      {session?.user.id ? (
+        <div className="flex">
+          <Image
+            src={session?.user.image}
+            width={37}
+            height={37}
+            className="rounded-full"
+            alt="profile"
+            onClick={() => setToggleDropdown((prev) => !prev)}
+          />
+          {toggleDropdown && (
+            <div className="dropdown">
+              <NavItems
+                items={orderedNavItems}
+                viewPort="mobile"
+                extraProps={{ customAction: () => setToggleDropdown(false) }}
               />
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <NavItems items={orderedNavItems} viewPort="mobile" />
+      )}
     </div>
   );
 };
@@ -107,16 +129,17 @@ const MobileView = ({
 const View = ({ session, navItems }) => {
   const [toggleDropdown, setToggleDropdown] = useState(false);
 
+  // the first element is for the logo and is displayed regardless of current session status
   const { key, ...rest } = navItems[0];
-  const imageSrc = session?.user.image;
   const remainingNavItems = navItems.slice(1);
+
   return (
     <>
       <NavItem key={key} {...rest} />
       <DesktopView navItems={remainingNavItems} />
       <MobileView
         {...{
-          imageSrc,
+          session,
           toggleDropdown,
           setToggleDropdown,
         }}
@@ -128,10 +151,10 @@ const View = ({ session, navItems }) => {
 
 // Main Component
 const Nav = () => {
-  // Local States
-  const [providers, setProviders] = useState(null);
   // Constants
   const { data: session } = useSession();
+  // Local States
+  const [providers, setProviders] = useState(null);
 
   const NavItemsMap = {
     Logo: {
@@ -154,42 +177,42 @@ const Nav = () => {
     Create: {
       label: "Create Post",
       href: "/create-post",
-      className: "black_btn",
+      className: {
+        desktop: "black_btn",
+        mobile: "dropdown_btn",
+      },
       type: "link",
       authRequired: true,
     },
     SignOut: {
       label: "Sign Out",
       defaultAction: () => signOut(),
-      className: "outline_btn",
+      className: {
+        desktop: "outline_btn",
+        mobile: "mt-5 w-full black_btn",
+      },
       type: "button",
       authRequired: true,
     },
     Profile: {
-      label: (
-        <Image
-          src={session?.user.image}
-          alt="Profile"
-          width={37}
-          height={37}
-          className="rounded-full"
-        />
-      ),
+      label: {
+        desktop: (
+          <Image
+            src={session?.user.image}
+            alt="Profile"
+            width={37}
+            height={37}
+            className="rounded-full"
+          />
+        ),
+        mobile: "My Profile",
+      },
       href: "/profile",
+      className: "dropdown_link",
       type: "link",
       authRequired: true,
     },
-    SignIn: {
-      buttons:
-        providers &&
-        Object.values(providers).map((provider) => ({
-          label: "Sign In",
-          defaultAction: () => signIn(provider.id),
-          className: "black_btn",
-        })),
-      type: "button",
-      authRequired: false,
-    },
+    SignIn: { buttons: [], type: "button", authRequired: false },
   };
 
   useEffect(() => {
@@ -202,6 +225,15 @@ const Nav = () => {
 
   const generateNavItems = () => {
     const sessionStatus = session?.user.id ? true : false;
+
+    NavItemsMap["SignIn"].buttons =
+      providers &&
+      Object.values(providers).map((provider) => ({
+        label: "Sign In",
+        defaultAction: () => signIn(provider.id),
+        className: "black_btn",
+      }));
+
     return Object.entries(NavItemsMap)
       .filter(
         ([key, item]) =>

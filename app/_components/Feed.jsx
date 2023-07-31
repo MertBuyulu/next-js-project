@@ -31,7 +31,6 @@ const Feed = () => {
   const [searchText, setSearchText] = useState("");
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [searchedResults, setSearchedResults] = useState([]);
-
   const [postsLikedBySessionUserMap, setPostsLikedBySessionUserMap] = useState(
     {}
   );
@@ -90,7 +89,7 @@ const Feed = () => {
           required
           onChange={handleSearchChange}
           value={searchText}
-          className="search_input peer"
+          className="search_input"
         />
       </form>
 
